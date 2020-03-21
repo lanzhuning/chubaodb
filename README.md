@@ -1,12 +1,14 @@
 # chubaodb
 
-As a cloud native structured data store, ChubaoDB has several key features:
+ChubaoDB is a cloud native distributed document database on top of ChubaoFS. 
+
+As a scalable non-relational structured data infrastructure, ChubaoDB has several key features:
 
 * flexible data model
 
 * disaggregated storage and compute architecture
 
-* rich secondary indexes
+* rich indexes for efficient search
 
 
 ## External Interface
@@ -24,7 +26,7 @@ master, partition server, router
 
 orchestracted by Kubernetes
 
-ChubaoFS (replicated across three AZs) works as the shared storage infrastructure
+ChubaoFS (replicated across three AZs) works as the underlying storage infrastructure
 
 
 ## Licence
@@ -34,6 +36,10 @@ Apache 2
 
 ## Acknowledgments
 
-rocksdb
+* jimraft
+
+* rocksdb
+
+* tantivy
 
 
