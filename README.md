@@ -13,9 +13,11 @@ As a scalable non-relational structured data infrastructure, ChubaoDB has severa
 
 ## External Interface
 
-collection, document
+collection, document, field
 
-dockey = (hashkey:string, sortkey:string), and sortkey can be empty
+dockey -> document, dockey = (hashkey:string, sortkey:string), hash key (also called partition key) is used for data partitioning, and sort key (not necessary and can be empty) is used for data ordering - all documents with the same hashkey value are stored together, in sorted order by sortkey value.
+
+fields that are defined in the schema are indexed for fast search. 
 
 document API: Create, Update, Upsert, Delete, Overwrite, Get, Search, Count, ...
 
