@@ -1,0 +1,40 @@
+[package]
+name = "chubaodb"
+version = "0.1.0"
+description = "ChubaoDB is a cloud native distributed non-relational database"
+readme = "README.md"
+license = "Apache-2.0"
+edition = "2018"
+authors = ["The Chubao Authors"]
+
+
+[[bin]]
+name = "chubaodb"
+path = "src/main.rs"
+doc = false
+
+[dependencies]
+log = "0.4"
+log4rs = "0.10.0"
+clap = "2.33.0"
+chrono = "0.4"
+backtrace = "0.3"
+toml = "0.5.6"
+actix-web = "2"
+actix-rt = "1"
+http = "0.2"
+tonic = { version = "0.1.1", features = ["tls"] }
+tokio = { version = "0.2", features = ["full"] }
+prost = "0.6"
+serde = { version = "1.0" }
+serde_derive = "1.0.104"
+serde_json = "1.0"
+base64 = "0.12.0"
+uuid = { version = "0.8", features = ["v4"] }
+rocksdb = { version = "0.13", features = ["lz4"] }
+reqwest = { version = "0.10", features = ["json", "blocking"],default-features=false }
+git-version = "0.3.4"
+
+[build-dependencies]
+tonic-build = "0.1.1"
+
