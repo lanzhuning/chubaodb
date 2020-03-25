@@ -258,8 +258,8 @@ impl PartitionService {
     pub async fn count(&self, req: CountDocumentRequest) -> ASResult<CountDocumentResponse> {
         let mut cdr = CountDocumentResponse {
             code: SUCCESS as i32,
-            partition_count: HashMap::new(),
-            sum: 0,
+            estimate_count: 0,
+            index_count: 0,
             message: String::default(),
         };
 
@@ -268,8 +268,8 @@ impl PartitionService {
             if let Some(simba) = self.simba_map.read().unwrap().get(&cpid) {
                 match simba.count() {
                     Ok(v) => {
-                        cdr.sum += v;
-                        cdr.partition_count.insert(*collection_partition_id, v);
+                        cdr.estimate_count += v.0;
+                        cdr.index_count += v.1;
                     }
                     Err(e) => {
                         let e = cast_to_err(e);

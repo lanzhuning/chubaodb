@@ -112,19 +112,17 @@ impl Simba {
         }
     }
 
-    //it use estimate
-    pub fn count(&self) -> ASResult<u64> {
-        match self
+    //it use 1.estimate of rocksdb  2.index of u64
+    pub fn count(&self) -> ASResult<(u64, u64)> {
+        let estimate_rocksdb = self
             .rocksdb
             .db
-            .property_int_value("rocksdb.estimate-num-keys")
-        {
-            Ok(ov) => match ov {
-                Some(v) => Ok(v),
-                None => Ok(0),
-            },
-            Err(e) => Err(err_box(format!("{}", e.to_string()))),
-        }
+            .property_int_value("rocksdb.estimate-num-keys")?
+            .unwrap_or(0);
+
+        let tantivy_count = self.tantivy.count()?;
+
+        Ok((estimate_rocksdb, tantivy_count))
     }
 
     pub fn search(&self, sdreq: Arc<SearchDocumentRequest>) -> SearchDocumentResponse {

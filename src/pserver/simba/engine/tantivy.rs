@@ -21,7 +21,7 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
 use tantivy::{
-    collector::TopDocs,
+    collector::{Count, MultiCollector, TopDocs},
     directory::MmapDirectory,
     query::QueryParser,
     schema,
@@ -134,6 +134,15 @@ impl Tantivy {
         warn!("partition:{} index released", self.partition.id);
     }
 
+    pub fn count(&self) -> ASResult<u64> {
+        let searcher = self.index_reader.searcher();
+        let mut sum = 0;
+        for sr in searcher.segment_readers() {
+            sum += sr.num_docs() as u64;
+        }
+        Ok(sum)
+    }
+
     pub fn search(&self, sdr: Arc<SearchDocumentRequest>) -> ASResult<SearchDocumentResponse> {
         self.check_index()?;
         let searcher = self.index_reader.searcher();
@@ -146,12 +155,19 @@ impl Tantivy {
         );
         let size = sdr.size as usize;
         let q = convert(query_parser.parse_query(sdr.query.as_str()))?;
-        let limit = TopDocs::with_limit(size);
+
+        let mut collectors = MultiCollector::new();
+        let top_docs_handle = collectors.add_collector(TopDocs::with_limit(size));
+        let count_handle = collectors.add_collector(Count);
+
         let search_start = SystemTime::now();
-        let top_docs = convert(searcher.search(&q, &limit))?;
+        let mut multi_fruit = convert(searcher.search(&q, &collectors))?;
+
+        let count = count_handle.extract(&mut multi_fruit);
+        let top_docs = top_docs_handle.extract(&mut multi_fruit);
         let mut sdr = SearchDocumentResponse {
             code: SUCCESS as i32,
-            total: 0,
+            total: count as u64,
             hits: Vec::with_capacity(size),
             info: None, //if this is none means it is success
         };
