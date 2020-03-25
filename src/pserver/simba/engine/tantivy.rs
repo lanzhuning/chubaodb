@@ -198,7 +198,7 @@ impl Tantivy {
         Ok(sdr)
     }
 
-    pub fn write(&self, sn: u64, key: &Vec<u8>, value: &Vec<u8>) -> ASResult<()> {
+    pub fn write(&self, key: &Vec<u8>, value: &Vec<u8>) -> ASResult<()> {
         let iid = base64::encode(key);
 
         let pbdoc: crate::pserverpb::Document =
@@ -208,9 +208,7 @@ impl Tantivy {
 
         let mut doc = Document::default();
         doc.add_text(Field::from_field_id(ID_INDEX), iid.as_str());
-        println!("dddddd set value");
         doc.add_bytes(Field::from_field_id(SOURCE_INDEX), value.clone());
-        println!("dddddd set value:{:?}", value);
         let schema = self.index.schema();
         for (k, v) in source.as_object().unwrap() {
             if let Some(f) = schema.get_field(k) {
@@ -236,17 +234,15 @@ impl Tantivy {
             .unwrap()
             .delete_term(Term::from_field_text(Field::from_field_id(0), iid.as_str()));
         self.index_writer.read().unwrap().add_document(doc);
-        self.set_sn_if_max(sn);
         Ok(())
     }
 
-    pub fn delete(&self, sn: u64, key: &Vec<u8>) -> ASResult<()> {
+    pub fn delete(&self, key: &Vec<u8>) -> ASResult<()> {
         let iid = base64::encode(key);
         self.index_writer
             .read()
             .unwrap()
             .delete_term(Term::from_field_text(Field::from_field_id(0), iid.as_str()));
-        self.set_sn_if_max(sn);
         Ok(())
     }
 
@@ -259,20 +255,9 @@ impl Tantivy {
 }
 
 impl Engine for Tantivy {
-    fn flush(&self, pre_sn: u64) -> Option<u64> {
-        let sn = self.get_sn();
-        if pre_sn > sn {
-            warn!(
-                "pre index sn is:{} , db sn is:{}  Impossible！！！！",
-                pre_sn, sn
-            );
-            return Some(pre_sn);
-        }
-        if pre_sn < sn {
-            self.index_writer.write().unwrap().commit().unwrap(); //TODO: fix err........
-            return Some(sn);
-        }
-        None
+    fn flush(&self) -> ASResult<()> {
+        convert(self.index_writer.write().unwrap().commit())?;
+        Ok(())
     }
 
     fn release(&self) {
